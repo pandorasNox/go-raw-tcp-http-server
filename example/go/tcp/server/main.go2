@@ -1,0 +1,60 @@
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"log"
+	"net"
+	"time"
+)
+
+func main() {
+	fmt.Println("server start...")
+
+	listener, err := net.Listen("tcp", ":8080")
+	if err != nil {
+		log.Fatalf("couldn't listen: %s", err)
+	}
+	defer listener.Close()
+
+	for {
+		conn, err := listener.Accept()
+		if err != nil {
+			log.Fatalf("couldn't accept connection: %s", err)
+		}
+
+		handleConnection(conn)
+	}
+}
+
+func handleConnection(conn net.Conn) {
+	defer conn.Close()
+	// fmt.Fprint(conn, "this is how it goes: ...\n")
+	readAndWrite(conn)
+}
+
+func readAndWrite(conn net.Conn) {
+	fmt.Printf("conn.LocalAddr: %s\n", conn.LocalAddr())
+	fmt.Printf("conn.RemoteAddr: %s\n", conn.RemoteAddr())
+
+	buff := bufio.NewScanner(conn)
+	for buff.Scan() {
+		log.Print(".")
+		line := buff.Text()
+
+		log.Printf("line recived: %s\n", line)
+		if line == "time?" {
+			fmt.Fprintf(conn, "current time: %s", time.Now())
+		}
+
+		if line == "done" {
+			break
+		}
+	}
+
+	err := buff.Err()
+	if err != nil {
+		//handle error
+	}
+
+}

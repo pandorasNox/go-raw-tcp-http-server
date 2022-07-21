@@ -1,0 +1,55 @@
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"log"
+	"net"
+)
+
+func main() {
+	fmt.Println("client send...")
+
+	serverAddress := "localhost:8080"
+
+	tcpServerAddr, err := net.ResolveTCPAddr("tcp", serverAddress)
+	if err != nil {
+		log.Fatalf("ResolveTCPAddr failed: %s\n", err.Error())
+	}
+	fmt.Println("servAddr:", tcpServerAddr.String())
+
+	conn, err := net.DialTCP("tcp", nil, tcpServerAddr)
+	if err != nil {
+		log.Fatalf("couldn't dial address \"%s\": %s", tcpServerAddr.String(), err)
+	}
+	defer conn.Close()
+
+	strEcho := "time?\n"
+	_, err = conn.Write([]byte(strEcho))
+	if err != nil {
+		log.Fatalf("Write to server failed: %s", err)
+	}
+	fmt.Printf("write to server = %s\n", strEcho)
+
+	//readOut(conn)
+	reply := make([]byte, 1024)
+	_, err = conn.Read(reply)
+	if err != nil {
+		log.Fatalf("Read from server failed: %s", err)
+	}
+	fmt.Printf("reply from server=%s\n", string(reply))
+
+	// fmt.Fprint(conn, "time?")
+	// time.Sleep(time.Second * 3)
+	// readOut(conn)
+}
+
+func readOut(conn net.Conn) {
+	buff := bufio.NewScanner(conn)
+	for buff.Scan() {
+		line := buff.Text()
+		fmt.Printf("recived line: %s\n", line)
+
+		break
+	}
+}
